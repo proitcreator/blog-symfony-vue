@@ -37,14 +37,10 @@ RUN a2enmod rewrite
 # Clean up
 RUN apt-get autoremove -y && apt-get autoclean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-#COPY app/.env.dev /var/www/app/.env
-
 COPY app /var/www/app
 
 WORKDIR /var/www/app
 
-#RUN cp -n -p .env.dev .env
-
 RUN composer install --dev
 
-RUN bin/console lexik:jwt:generate-keypair
+RUN php bin/console lexik:jwt:generate-keypair
