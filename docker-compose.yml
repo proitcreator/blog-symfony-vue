@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+    postgres:
+        image: "postgres:${DB_VERSION}"
+        container_name: pgsql
+        restart: always
+        volumes:
+            - ./postgres/data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: "${DB_USERNAME}"
+            POSTGRES_PASSWORD: "${DB_PASSWORD}"
+            POSTGRES_DB: "${DB_DATABASE}"
+
+    node:
+        tty: true
+        build: ./node
+        container_name: node
+        restart: always
+        depends_on:
+            - postgres
+            - php-apache
+        volumes:
+            - /app/node_modules
+            - ./node/nuxt:/app
+        ports:
+            - "3000:3000"
+            - "24678:24678"
+
+    pgadmin:
+        build: ./pgadmin
+        restart: always
+        container_name: pgadmin
+        ports:
+            - "8080:80"
+        depends_on:
+            - postgres
+        volumes:
+            - ./pgadmin/data:/var/lib/pgadmin
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+            PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+
+    php-apache:
+        build:
+            context: ./php-apache
+            args:
+                - DATABASE_URL
+        restart: always
+        container_name: php-apache
+        env_file:
+            -   ./php-apache/app/.env.dev
+            -   ./php-apache/app/.env
+        ports:
+            - "8000:80"
+        depends_on:
+            - postgres
+        volumes:
+            - /var/www/app/var
+            - /var/www/app/vendor
+            - /var/www/app/config/jwt
+            - /var/www/app/public/bundles
+            - ./php-apache/app:/var/www/app
+            - ./postgres/data/global/pg_filenode.map:/var/lib/postgresql/data/global/pg_filenode.map
+        environment:
+            - DB_CONNECTION
+            - DB_VERSION
+            - DB_HOST
+            - DB_PORT
+            - DB_DATABASE
+            - DB_USERNAME
+            - DB_PASSWORD
