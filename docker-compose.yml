@@ -4,7 +4,6 @@ services:
     postgres:
         image: "postgres:${DB_VERSION}"
         container_name: postgres
-        restart: always
         volumes:
             - ./postgres/data:/var/lib/postgresql/data
         environment:
@@ -16,7 +15,6 @@ services:
         tty: true
         build: ./node
         container_name: node
-        restart: always
         depends_on:
             - postgres
             - php-apache
@@ -29,7 +27,6 @@ services:
 
     pgadmin:
         build: ./pgadmin
-        restart: always
         container_name: pgadmin
         ports:
             - "8080:80"
@@ -46,7 +43,6 @@ services:
             context: ./php-apache
             args:
                 - DATABASE_URL
-        restart: always
         container_name: php-apache
         env_file:
             -   ./php-apache/app/.env.dev
@@ -61,7 +57,6 @@ services:
             - /var/www/app/config/jwt
             - /var/www/app/public/bundles
             - ./php-apache/app:/var/www/app
-            - ./postgres/data/global/pg_filenode.map:/var/lib/postgresql/data/global/pg_filenode.map
         environment:
             - DB_CONNECTION
             - DB_VERSION
